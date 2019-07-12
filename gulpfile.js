@@ -58,8 +58,8 @@ var sassSrc = "./resources/sass/main.scss",
     bootstrap = "./node_modules/bootstrap/dist/js/bootstrap.min.js",
     build = "./static/build/",
     tmp = build + "temp/",
-    tmpJs = build + "js",
-    tmpCss = build + "css"
+    tmpJs = tmp + "js",
+    tmpCss = tmp + "css"
 ;
 
 //versioning on build files
@@ -76,6 +76,7 @@ gulp.task("hash", function() {
 // clean the last build completely
 gulp.task("clean", function() {
     return del([dist]);
+    done();
 });
 
 
@@ -85,12 +86,13 @@ gulp.task(
         taskHash,
         done => {
             return del([build]);
+            done();
         }
     )
 );
 
 // delete assets except js and css files
-gulp.task(taskDeleteAssets, () => {
+gulp.task("delete-assets", () => {
     return del([assets + "/*", "!./dist/assets/rev-manifest.json"]);
 });
 
@@ -126,6 +128,7 @@ gulp.task("vendor-js", done => {
         .src([jquery, popperjs, bootstrap])
         .pipe(concat("vendor-bundle.js"))
         .pipe(gulp.dest(build));
+    done();
 });
 
 gulp.task(
@@ -139,6 +142,7 @@ gulp.task(
                 .pipe(concat("bundle.js"))
                 .pipe(sourcemaps.write())
                 .pipe(gulp.dest(tmpJs));
+            done();
         }
     )
 );
@@ -146,13 +150,38 @@ gulp.task(
 gulp.task(
     "compress-js",
     gulp.series(taskBundleJs, function(cb) {
-        pump([gulp.src()]);
+        pump([gulp.src(tmp + "**/*.js"), uglify(), gulp.dest(tmp)], cb);
     })
 );
+
+// images optimising
+gulp.task("optimise-img", () => {
+    return gulp
+        .src(imgSrc + "*.+(png|jpg|jpeg|gif|svg)")
+        // .pipe(
+        //     cache(
+        //         imagemin({
+        //             interlaced: true
+        //         })
+        //     )
+        // )
+        .pipe(gulp.dest(assets));
+});
 
 gulp.task("build-html",
     gulp.series(function(done) {
         return gulp.src(htmlSrc).pipe(gulp.dest(dist));
+        done();
+    })
+);
+
+gulp.task(
+    "copy-fonts",
+    gulp.series("clean-fonts", function(done) {
+        return gulp
+            .src(fontSrc)
+            .pipe(gulp.dest(dist + '/fonts/'));
+        done();
     })
 );
 
@@ -166,7 +195,7 @@ gulp.task(
             .pipe(concat("style.css"))
             .pipe(sourcemaps.write())
             .pipe(cleanCSS({ compatibility: "ie8"}))
-            .pipe(gulp.dest(css_temp))
+            .pipe(gulp.dest(tmpCss))
             .pipe(browserSync.stream());
     }
 );
@@ -190,6 +219,7 @@ gulp.task(
                 .src(htmlDist)
                 .pipe(revRewrite({manifest}))
                 .pipe(gulp.dest(dist));
+            done();
         }
     )
 );
