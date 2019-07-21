@@ -40,13 +40,14 @@ const taskWatch = "watch";
 const taskUpdate = "update";
 const taskServe = "serve";
 const taskLiveReload = 'live-reload';
+const taskOptimiseImages = 'optimise-img';
 
 
 sass.compiler = require("node-sass");
 
 var sassSrc = "./resources/sass/main.scss",
     sassFiles = "./resources/sass/**",
-    imgSrc = "./resources/assets/**",
+    imgSrc = "./resources/assets/**/",
     htmlSrc = "./resources/*.html",
     jsSrc = "./resources/js/*.js",
     fontSrc = "./resources/fonts/*",
@@ -205,7 +206,8 @@ gulp.task(
     gulp.parallel(
         taskBuildHtml,
         taskBuildSass,
-        taskBundleJs
+        taskBundleJs,
+        taskOptimiseImages
     )
 );
 
